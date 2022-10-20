@@ -40,6 +40,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"math/rand"
+	"net"
 	"sort"
 	"strconv"
 	"strings"
@@ -1605,10 +1606,49 @@ func (c *RegionCache) GetCachedRegionWithRLock(regionID RegionVerID) (r *Region)
 	return
 }
 
+func enableUDP() bool {
+	return true // TODO
+}
+
+var localIPs []string
+
+func init() {
+	if ifaces, err := net.Interfaces(); err == nil {
+		for _, i := range ifaces {
+			if addrs, err := i.Addrs(); err == nil {
+				for _, addr := range addrs {
+					var ip net.IP
+					switch v := addr.(type) {
+					case *net.IPNet:
+						ip = v.IP
+					case *net.IPAddr:
+						ip = v.IP
+					}
+					localIPs = append(localIPs, ip.String())
+				}
+			}
+		}
+	}
+}
+
+func isLocal(addr string) bool {
+	for _, ip := range localIPs {
+		if ip == addr {
+			return true
+		}
+	}
+	return false
+}
+
 func (c *RegionCache) getStoreAddr(bo *retry.Backoffer, region *Region, store *Store) (addr string, err error) {
 	state := store.getResolveState()
 	switch state {
 	case resolved, needCheck:
+		if enableUDP() && isLocal(store.addr) {
+			addr = "/tmp/tikv.socket"
+			return
+		}
+
 		addr = store.addr
 		return
 	case unresolved:
