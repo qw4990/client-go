@@ -1624,7 +1624,10 @@ func init() {
 					case *net.IPAddr:
 						ip = v.IP
 					}
-					localIPs = append(localIPs, ip.String())
+					ipStr := ip.String()
+					if !strings.Contains(ipStr, "::") { // e.g. fe80::984f:64ff:fe51:1ff6
+						localIPs = append(localIPs, ipStr) // only IPv4
+					}
 				}
 			}
 		}
@@ -1632,8 +1635,13 @@ func init() {
 }
 
 func isLocal(addr string) bool {
-	for _, ip := range localIPs {
-		if ip == addr {
+	idx := strings.Index(addr, ":")
+	if idx == -1 {
+		return false
+	}
+	addrIP := addr[:idx]
+	for _, localIP := range localIPs {
+		if localIP == addrIP {
 			return true
 		}
 	}
