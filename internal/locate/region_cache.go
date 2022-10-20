@@ -1606,11 +1606,22 @@ func (c *RegionCache) GetCachedRegionWithRLock(regionID RegionVerID) (r *Region)
 	return
 }
 
-func enableUDP() bool {
-	return true // TODO
+// SetEnableUDP ...
+func SetEnableUDP(enable bool) {
+	if enable {
+		atomic.StoreUint32(&enableUDP, 1)
+	} else {
+		atomic.StoreUint32(&enableUDP, 0)
+	}
+}
+
+// GetEnableUDP ...
+func GetEnableUDP() bool {
+	return atomic.LoadUint32(&enableUDP) == 1
 }
 
 var localIPs []string
+var enableUDP uint32
 
 func init() {
 	if ifaces, err := net.Interfaces(); err == nil {
@@ -1652,7 +1663,7 @@ func (c *RegionCache) getStoreAddr(bo *retry.Backoffer, region *Region, store *S
 	state := store.getResolveState()
 	switch state {
 	case resolved, needCheck:
-		if enableUDP() && isLocal(store.addr) {
+		if atomic.LoadUint32(&enableUDP) == 1 && isLocal(store.addr) {
 			addr = "/tmp/tikv.socket"
 			return
 		}

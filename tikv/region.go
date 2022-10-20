@@ -176,3 +176,13 @@ func SetStoreLivenessTimeout(t time.Duration) {
 func NewRegionCache(pdClient pd.Client) *locate.RegionCache {
 	return locate.NewRegionCache(pdClient)
 }
+
+// SetEnableUDP ...
+func SetEnableUDP(enable bool) {
+	locate.SetEnableUDP(enable)
+}
+
+// GetEnableUDP ...
+func GetEnableUDP() bool {
+	return locate.GetEnableUDP()
+}
