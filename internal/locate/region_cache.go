@@ -1664,7 +1664,7 @@ func (c *RegionCache) getStoreAddr(bo *retry.Backoffer, region *Region, store *S
 	switch state {
 	case resolved, needCheck:
 		if atomic.LoadUint32(&enableUDP) == 1 && isLocal(store.addr) {
-			addr = "/tmp/tikv.socket"
+			addr = "unix:///tmp/tikv.socket"
 			return
 		}
 
